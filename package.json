@@ -15,9 +15,9 @@
     "tsc"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-	"prebuild": "rm -rf dist/*",
-    "build": "rollup -c"
+    "prebuild": "rm -rf dist/*",
+    "build": "rollup -c",
+    "prepublish": "npm run build"
   },
   "author": "tsne",
   "license": "MIT",
@@ -27,10 +27,10 @@
     "url": "git+https://github.com/tsne/rollup-plugin-tsc.git"
   },
   "devDependencies": {
-    "rollup": "^0.45.2",
-    "rollup-pluginutils": "^2.0.1"
+    "rollup": "^0.45.2"
   },
   "dependencies": {
+    "rollup-pluginutils": "^2.0.1",
     "tslib": "^1.7.1",
     "typescript": "^2.4.2"
   }
