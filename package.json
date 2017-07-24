@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-tsc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A small rollup plugin for transpiling typescript.",
   "main": "dist/rollup-plugin-tsc.cjs.js",
   "module": "dist/rollup-plugin-tsc.es.js",
