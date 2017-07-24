@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-tsc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A small rollup plugin for transpiling typescript.",
   "main": "dist/rollup-plugin-tsc.cjs.js",
   "module": "dist/rollup-plugin-tsc.es.js",
@@ -17,7 +17,7 @@
   "scripts": {
     "prebuild": "rm -rf dist/*",
     "build": "rollup -c",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "author": "tsne",
   "license": "MIT",
