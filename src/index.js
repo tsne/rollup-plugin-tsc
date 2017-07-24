@@ -1,7 +1,6 @@
 import {createFilter} from "rollup-pluginutils";
 import {nodeModuleNameResolver, transpileModule, flattenDiagnosticMessageText, DiagnosticCategory, sys} from "typescript";
 import {readFileSync} from "fs";
-import {resolve} from "path";
 import {module as tslibModule, name as tslib} from "tslib/package.json";
 
 
@@ -13,7 +12,7 @@ export default function tsc(options) {
 	const exclude = options.exclude || ["*.d.ts", "**/*.d.ts"];
 	const filter = createFilter(include, exclude);
 
-	const tslibSrc = readFileSync(resolve(`${tslib}/${tslibModule}`), "utf8");
+	const tslibSrc = readFileSync(require.resolve(`${tslib}/${tslibModule}`), "utf8");
 	const tsconfig = options || {};
 	const compilerOptions = Object.assign({}, tsconfig.compilerOptions, {
 		target: "ES2015",
