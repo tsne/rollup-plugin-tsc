@@ -17,7 +17,7 @@ export default {
 
 	plugins: [
 		tsc({
-			// put tsconfig here
+			// put your tsconfig here
 		})
 	]
 };

@@ -11,8 +11,8 @@ export default {
 		"path",
 	],
 	targets: [
-		{dest: pkg.module, format: "es"},
-		{dest: pkg.main, format: "cjs"},
+		{dest: pkg["module"], format: "es"},
+		{dest: pkg["main"], format: "cjs"},
 	],
 	sourceMap: true,
 };

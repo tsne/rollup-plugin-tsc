@@ -30,7 +30,6 @@
     "rollup": "^0.45.2"
   },
   "dependencies": {
-    "rollup-pluginutils": "^2.0.1",
     "tslib": "^1.7.1",
     "typescript": "^2.4.2"
   }
