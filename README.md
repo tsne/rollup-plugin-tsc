@@ -1,6 +1,6 @@
 # rollup-plugin-tsc
 
-A small rollup plugin for transpiling Typescript.
+A small [rollup](https://github.com/rollup/rollup) plugin for transpiling Typescript.
 
 ## Installation
 ```
@@ -10,7 +10,7 @@ npm install --save-dev rollup-plugin-tsc
 ## Usage
 ```js
 // rollup.config.js
-import json from 'rollup-plugin-tsc';
+import tsc from 'rollup-plugin-tsc';
 
 export default {
 	entry: 'src/main.ts',
