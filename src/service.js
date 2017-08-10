@@ -1,5 +1,5 @@
 import {existsSync, readFileSync} from "fs";
-import {extname, dirname, normalize, resolve} from "path";
+import {extname, dirname, relative} from "path";
 import {
 	sys,
 	parseJsonConfigFileContent,
@@ -7,6 +7,7 @@ import {
 	resolveModuleName,
 	createDocumentRegistry,
 	createLanguageService,
+	flattenDiagnosticMessageText,
 	ScriptSnapshot,
 	ScriptTarget,
 	ModuleKind,

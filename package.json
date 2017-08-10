@@ -7,7 +7,7 @@
   "jsnext:main": "dist/rollup-plugin-tsc.es.js",
   "files": [
     "dist",
-    "src"
+    "README.md"
   ],
   "keywords": [
     "rollup-plugin",

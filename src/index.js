@@ -24,7 +24,7 @@ export default function tsc(tsconfig) {
 			}
 			importer = importer.replace("\\", "/");
 
-			const {resolvedFileName} = service.host.resolveModuleName(importee, importer);
+			const {resolvedFileName} = service.host.resolveModuleName(importee, importer) || {};
 			return resolvedFileName && !resolvedFileName.endsWith(".d.ts")
 				? resolvedFileName
 				: null;
