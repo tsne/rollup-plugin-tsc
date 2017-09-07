@@ -13,6 +13,7 @@ export default {
 		"rollup-pluginutils",
 		"fs",
 		"path",
+		"process",
 	],
 	sourcemap: true,
 };

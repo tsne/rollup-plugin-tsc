@@ -1,3 +1,4 @@
+import * as process from "process";
 import {existsSync, readFileSync} from "fs";
 import {extname, dirname, relative} from "path";
 import {
@@ -19,7 +20,6 @@ import {createFileStore, normalizePath} from "./files";
 
 const defaultCompilerOptions = {
 	module: ModuleKind.ES2015,
-	noEmitOnError: true,
 	sourceMap: true,
 };
 
@@ -32,7 +32,7 @@ export function createService(tsconfig) {
 
 	Object.assign(options, {
 		target: ScriptTarget.ES2015,
-		skipDefaultLibCheck: true,
+		noEmitOnError: false,
 		suppressOutputPathCheck: true,
 	});
 
@@ -107,8 +107,7 @@ function createServiceHost(options, files, cwd) {
 		},
 
 		readFile(filename) {
-			const f = files.get(filename, true);
-			return f.contents;
+			return files.read(filename);
 		},
 
 		getCompilationSettings() {
@@ -124,13 +123,13 @@ function createServiceHost(options, files, cwd) {
 		},
 
 		getScriptVersion(filename) {
-			const f = files.tryGet(filename);
-            return f ? `${f.version}` : "";
+			const f = files.get(filename);
+			return f ? `${f.version}` : "";
         },
 
 		getScriptSnapshot(filename) {
-			const f = files.get(filename, true);
-            return ScriptSnapshot.fromString(f.contents);
+			const contents = files.read(filename);
+			return ScriptSnapshot.fromString(contents);
         },
 
 		resolveModuleNames(moduleNames, containingFile) {

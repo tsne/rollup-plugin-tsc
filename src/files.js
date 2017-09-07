@@ -24,21 +24,21 @@ export function createFileStore(filenames) {
 			return filename in files;
 		},
 
-		tryGet(filename) {
+		get(filename) {
 			filename = normalizePath(filename);
 			return files[filename];
 		},
 
-		get(filename, needContents) {
+		read(filename) {
 			filename = normalizePath(filename);
 			let f = files[filename];
 			if(!f) {
 				f = newFile(filename);
 			}
-			if(needContents && !f.contents) {
+			if(!f.contents) {
 				f.contents = readFileSync(filename, "utf-8");
 			}
-			return f;
+			return f.contents;
 		},
 
 		all() {
