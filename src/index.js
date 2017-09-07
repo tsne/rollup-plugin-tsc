@@ -1,4 +1,5 @@
-import {readFileSync} from "fs";
+import * as path from "path";
+import {readFileSync, writeFileSync} from "fs";
 import {module as tslibModule, name as tslib} from "tslib/package.json";
 import {createService} from "./service";
 
@@ -11,10 +12,20 @@ export default function tsc(tsconfig) {
 	const loadTslib = tslibLoader();
 	const service = createService(tsconfig);
 
+	let bundleInput;
+	let bundleDecl;
+
 	return {
 		name: "tsc",
 
-		options(opts) {},
+		options(opts) {
+			tsconfig.sourcemap = tsconfig.sourcemap || opts.sourcemap;
+			bundleInput = opts.input;
+			if(!path.isAbsolute(bundleInput)) {
+				const cwd = service.host.getCurrentDirectory();
+				bundleInput = path.join(cwd, bundleInput);
+			}
+		},
 
 		resolveId(importee, importer) {
 			if(importee === tslib) {
@@ -53,10 +64,25 @@ export default function tsc(tsconfig) {
 
 			const js = outputFiles.find(f => f.name.endsWith(".js") || f.name.endsWith(".jsx"));
 			const map = outputFiles.find(f => f.name.endsWith(".map"));
+			const dts = outputFiles.find(f => f.name.endsWith(".d.ts"));
+			if(dts && id === bundleInput) {
+				bundleDecl = dts;
+			}
+
 			return !js ? null : {
 				code: js.text,
 				map: map ? JSON.parse(map.text) : {mappings: ""},
 			};
+		},
+
+		onwrite(opts) {
+			if(!bundleDecl) {
+				return;
+			}
+
+			const dir = tsconfig.compilerOptions.declarationDir || path.dirname(opts.file);
+			const file = path.basename(opts.file, ".js") + ".d.ts";
+			writeFileSync(path.join(dir, file), bundleDecl.text);
 		},
 	};
 }

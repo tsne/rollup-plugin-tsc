@@ -25,7 +25,7 @@ const defaultCompilerOptions = {
 
 
 export function createService(tsconfig) {
-	const {options, fileNames, errors} = parseJsonConfigFileContent(tsconfig, sys, dirname(''), defaultCompilerOptions);
+	const {options, fileNames, errors} = parseJsonConfigFileContent(tsconfig, sys, dirname(""), defaultCompilerOptions);
 	if(errors.length) {
 		throw new Error(errorMessage(errors[0], cwd));
 	}
@@ -156,8 +156,12 @@ function createModuleResolutionHost() {
 }
 
 function errorMessage(diagnostic, cwd) {
-	const {line} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
 	const text = flattenDiagnosticMessageText(diagnostic.messageText, "\n");
-	const file = relative(cwd, diagnostic.file.fileName);
-	return `${file}:${line+1}: ${text}`;
+	if(!diagnostic.file) {
+		return `tsc: ${text}`;
+	} else {
+		const {line} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+		const file = relative(cwd, diagnostic.file.fileName);
+		return `${file}:${line+1}: ${text}`;
+	}
 }

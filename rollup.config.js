@@ -2,7 +2,11 @@ const pkg = require('./package.json');
 
 
 export default {
-	entry: "src/index.js",
+	input: "src/index.js",
+	output: [
+		{file: pkg["module"], format: "es"},
+		{file: pkg["main"], format: "cjs"},
+	],
 	external: [
 		"typescript",
 		"tslib/package.json",
@@ -10,9 +14,5 @@ export default {
 		"fs",
 		"path",
 	],
-	targets: [
-		{dest: pkg["module"], format: "es"},
-		{dest: pkg["main"], format: "cjs"},
-	],
-	sourceMap: true,
+	sourcemap: true,
 };
