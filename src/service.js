@@ -1,20 +1,17 @@
 import * as process from "process";
 import {existsSync, readFileSync} from "fs";
-import {extname, dirname, relative} from "path";
+import {dirname, relative} from "path";
 import {
 	sys,
 	parseJsonConfigFileContent,
-	getDefaultLibFilePath,
-	resolveModuleName,
 	createDocumentRegistry,
 	createLanguageService,
 	flattenDiagnosticMessageText,
-	ScriptSnapshot,
 	ScriptTarget,
 	ModuleKind,
 	DiagnosticCategory,
 } from "typescript";
-import {createFileStore, normalizePath} from "./files";
+import {createServiceHost} from "./servicehost";
 
 
 
@@ -37,10 +34,10 @@ export function createService(tsconfig) {
 	});
 
 	const cwd = process.cwd();
-	const files = createFileStore(fileNames);
-	const host = createServiceHost(options, files, cwd);
+	const host = createServiceHost(options, cwd);
 	const reg = createDocumentRegistry();
 	const svc = createLanguageService(host, reg);
+	const availFiles = fileNames.map(host.normalizePath);
 	svc.host = host;
 
 	svc.emit = function(filename) {
@@ -70,89 +67,12 @@ export function createService(tsconfig) {
 	}
 
 	svc.filter = function(filename) {
-		return files.contains(filename);
+		return availFiles.includes(filename);
 	}
 
 	return svc;
 }
 
-
-function createServiceHost(options, files, cwd) {
-	const extensions = [".ts", ".tsx"];
-	if(options.allowJs) {
-		extensions.push(".js", ".jsx");
-	}
-
-	const moduleResolutionHost = createModuleResolutionHost();
-	const resolveModule = function(moduleName, containingFile) {
-		const {resolvedModule} = resolveModuleName(moduleName, containingFile, options, moduleResolutionHost);
-		if(resolvedModule) {
-			resolvedModule.resolvedFileName = normalizePath(resolvedModule.resolvedFileName);
-			resolvedModule.originalFileName = resolvedModule.resolvedFileName;
-		}
-		return resolvedModule;
-	};
-
-	return {
-		resolveModuleName: resolveModule,
-
-		getDirectories: sys.getDirectories,
-		directoryExists: sys.directoryExists,
-		readDirectory: sys.readDirectory,
-		getDefaultLibFileName: getDefaultLibFilePath,
-
-
-		fileExists(filename) {
-			return files.contains(filename) || sys.fileExists(filename);
-		},
-
-		readFile(filename) {
-			return files.read(filename);
-		},
-
-		getCompilationSettings() {
-			return options;
-		},
-
-		getCurrentDirectory() {
-			return cwd;
-		},
-
-		getScriptFileNames() {
-			return files.all().filter(path => extensions.includes(extname(path)));
-		},
-
-		getScriptVersion(filename) {
-			const f = files.get(filename);
-			return f ? `${f.version}` : "";
-        },
-
-		getScriptSnapshot(filename) {
-			const contents = files.read(filename);
-			return ScriptSnapshot.fromString(contents);
-        },
-
-		resolveModuleNames(moduleNames, containingFile) {
-			return moduleNames.map(name => resolveModule(name, containingFile));
-		},
-
-		getNewLine() {
-			return options.newLine || sys.newLine;
-		},
-	};
-}
-
-function createModuleResolutionHost() {
-	return {
-		fileExists(filename) {
-			return existsSync(filename);
-		},
-
-		readFile(filename) {
-			return readFileSync(filename, "utf-8")
-		},
-	};
-}
 
 function errorMessage(diagnostic, cwd) {
 	const text = flattenDiagnosticMessageText(diagnostic.messageText, "\n");

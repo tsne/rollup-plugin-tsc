@@ -13,7 +13,7 @@ export default function tsc(tsconfig) {
 	const service = createService(tsconfig);
 
 	let bundleInput;
-	let bundleDecl;
+	let bundleDecls = [];
 
 	return {
 		name: "tsc",
@@ -52,6 +52,7 @@ export default function tsc(tsconfig) {
 			if(!service.filter(id)) {
 				return null;
 			}
+			service.host.addFile(id, code);
 
 			const {outputFiles, errors, warnings} = service.emit(id);
 			if(warnings && warnings.length) {
@@ -65,8 +66,8 @@ export default function tsc(tsconfig) {
 			const js = outputFiles.find(f => f.name.endsWith(".js") || f.name.endsWith(".jsx"));
 			const map = outputFiles.find(f => f.name.endsWith(".map"));
 			const dts = outputFiles.find(f => f.name.endsWith(".d.ts"));
-			if(dts && id === bundleInput) {
-				bundleDecl = dts;
+			if(dts) {
+				bundleDecls.push(dts);
 			}
 
 			return !js ? null : {
@@ -76,13 +77,11 @@ export default function tsc(tsconfig) {
 		},
 
 		onwrite(opts) {
-			if(!bundleDecl) {
-				return;
-			}
-
 			const dir = tsconfig.compilerOptions.declarationDir || path.dirname(opts.file);
-			const file = path.basename(opts.file, ".js") + ".d.ts";
-			writeFileSync(path.join(dir, file), bundleDecl.text);
+			bundleDecls.forEach(decl => {
+				const file = path.basename(decl.name);
+				writeFileSync(path.join(dir, file), decl.text);
+			});
 		},
 	};
 }
