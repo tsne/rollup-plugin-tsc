@@ -1,5 +1,5 @@
 import * as path from "path";
-import {readFileSync, writeFileSync} from "fs";
+import {readFileSync, writeFileSync, mkdirSync, statSync} from "fs";
 import {module as tslibModule, name as tslib} from "tslib/package.json";
 import {createService} from "./service";
 
@@ -77,7 +77,12 @@ export default function tsc(tsconfig) {
 		},
 
 		onwrite(opts) {
+			if(!bundleDecls.length) {
+				return;
+			}
+
 			const dir = tsconfig.compilerOptions.declarationDir || path.dirname(opts.file);
+			mkdirAll(dir);
 			bundleDecls.forEach(decl => {
 				const file = path.basename(decl.name);
 				writeFileSync(path.join(dir, file), decl.text);
@@ -93,5 +98,20 @@ function tslibLoader() {
 			src = readFileSync(require.resolve(`${tslib}/${tslibModule}`), "utf8");
 		}
 		return src;
+	}
+}
+
+function mkdirAll(path) {
+	try {
+		mkdirSync(path);
+	} catch(e) {
+		if(e.code === "ENOENT") {
+			mkdirAll(path.dirname(path));
+			return mkdirSync(path);
+		}
+		const stat = statSync(path);
+		if(!stat.isDirectory()) {
+			throw e;
+		}
 	}
 }
