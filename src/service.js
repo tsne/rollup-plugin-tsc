@@ -9,6 +9,7 @@ import {
 	flattenDiagnosticMessageText,
 	ScriptTarget,
 	ModuleKind,
+	ModuleResolutionKind,
 	DiagnosticCategory,
 } from "typescript";
 import {createServiceHost} from "./servicehost";
@@ -17,6 +18,7 @@ import {createServiceHost} from "./servicehost";
 
 const defaultCompilerOptions = {
 	module: ModuleKind.ES2015,
+	moduleResolution: ModuleResolutionKind.NodeJs,
 	sourceMap: true,
 };
 
