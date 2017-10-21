@@ -12,7 +12,6 @@ export default function tsc(tsconfig) {
 	const loadTslib = tslibLoader();
 	const service = createService(tsconfig);
 
-	let bundleInput;
 	let bundleDecls = [];
 
 	return {
@@ -20,11 +19,6 @@ export default function tsc(tsconfig) {
 
 		options(opts) {
 			tsconfig.sourcemap = tsconfig.sourcemap || opts.sourcemap;
-			bundleInput = opts.input;
-			if(!path.isAbsolute(bundleInput)) {
-				const cwd = service.host.getCurrentDirectory();
-				bundleInput = path.join(cwd, bundleInput);
-			}
 		},
 
 		resolveId(importee, importer) {
@@ -60,7 +54,7 @@ export default function tsc(tsconfig) {
 			}
 			if(errors && errors.length) {
 				errors.forEach(err => console.error(`ERROR: ${err}`));
-				this.error(`typescript compilation failed`);
+				this.error("typescript compilation failed");
 			}
 
 			const js = outputFiles.find(f => f.name.endsWith(".js") || f.name.endsWith(".jsx"));

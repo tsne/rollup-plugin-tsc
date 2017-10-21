@@ -52,7 +52,7 @@ export function createServiceHost(options, cwd) {
 		getScriptVersion(filename) {
 			const f = files[this.normalizePath(filename)];
 			return f ? f.version.toString() : "";
-        },
+		},
 
 		getScriptSnapshot(filename) {
 			let f = files[this.normalizePath(filename)];
@@ -60,7 +60,7 @@ export function createServiceHost(options, cwd) {
 				f = this.addFile(filename, this.readFile(filename));
 			}
 			return f.snap;
-        },
+		},
 
 		resolveModuleNames(moduleNames, containingFile) {
 			return moduleNames.map(name => this.resolveModuleName(name, containingFile));
