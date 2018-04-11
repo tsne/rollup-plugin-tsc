@@ -24,6 +24,7 @@ const defaultCompilerOptions = {
 
 
 export function createService(tsconfig) {
+	const cwd = process.cwd();
 	const {options, fileNames, errors} = parseJsonConfigFileContent(tsconfig, sys, dirname(""), defaultCompilerOptions);
 	if(errors.length) {
 		throw new Error(errorMessage(errors[0], cwd));
@@ -35,7 +36,6 @@ export function createService(tsconfig) {
 		suppressOutputPathCheck: true,
 	});
 
-	const cwd = process.cwd();
 	const host = createServiceHost(options, cwd);
 	const reg = createDocumentRegistry();
 	const svc = createLanguageService(host, reg);
