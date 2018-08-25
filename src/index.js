@@ -1,5 +1,5 @@
 import * as path from "path";
-import {readFileSync, writeFile, mkdirSync, statSync} from "fs";
+import * as fs from "fs";
 import {module as tslibModule, name as tslib} from "tslib/package.json";
 import {createService} from "./service";
 
@@ -76,11 +76,10 @@ export default function tsc(tsconfig) {
 			}
 
 			const dir = tsconfig.compilerOptions.declarationDir || path.dirname(opts.file);
-			mkdirAll(dir);
-			return Promise.all(bundleDecls.map(decl => {
+			return mkdirAll(dir).then(() => Promise.all(bundleDecls.map(decl => {
 				const file = path.basename(decl.name);
 				return emitFile(path.join(dir, file), decl.text);
-			}));
+			})));
 		},
 	};
 }
@@ -88,31 +87,49 @@ export default function tsc(tsconfig) {
 function tslibLoader() {
 	let src;
 	return function() {
-		if(!src) {
-			src = readFileSync(require.resolve(`${tslib}/${tslibModule}`), "utf8");
+		if(src) {
+			return Promise.resolve(src);
 		}
-		return src;
+
+		return new Promise((resolve, reject) => {
+			fs.readFile(require.resolve(`${tslib}/${tslibModule}`), "utf8", (err, data) => {
+				if(err) {
+					reject(err);
+				} else {
+					resolve(src = data);
+				}
+			});
+		});
 	}
 }
 
-function mkdirAll(path) {
-	try {
-		mkdirSync(path);
-	} catch(e) {
-		if(e.code === "ENOENT") {
-			mkdirAll(path.dirname(path));
-			return mkdirSync(path);
-		}
-		const stat = statSync(path);
-		if(!stat.isDirectory()) {
-			throw e;
-		}
-	}
+function mkdirAll(p) {
+	return new Promise((resolve, reject) => {
+		fs.mkdir(p, (err) => {
+			if(!err) {
+				return resolve();
+			}
+
+			if(err.code === "ENOENT") {
+				return mkdirAll(path.dirname(p)).then(() => mkdirAll(p));
+			}
+
+			fs.stat(p, (e, s) => {
+				if(e) {
+					reject(e);
+				} else if(!s.isDirectory()) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		});
+	});
 }
 
 function emitFile(filename, data) {
 	return new Promise((resolve, reject) => {
-		writeFile(filename, err => {
+		fs.writeFile(filename, err => {
 			if(err) {
 				reject(err);
 			} else {
