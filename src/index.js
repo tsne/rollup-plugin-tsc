@@ -29,7 +29,7 @@ export default function tsc(tsconfig) {
 			}
 			importer = importer.replace("\\", "/");
 
-			const {resolvedFileName} = service.host.resolveModuleName(importee, importer) || {};
+			const resolvedFileName = service.resolveModuleName(importee, importer);
 			return resolvedFileName && !resolvedFileName.endsWith(".d.ts")
 				? resolvedFileName
 				: null;
@@ -46,9 +46,8 @@ export default function tsc(tsconfig) {
 			if(!service.filter(id)) {
 				return null;
 			}
-			service.host.addFile(id, code);
 
-			const {outputFiles, errors, warnings} = service.emit(id);
+			const {outputFiles, errors, warnings} = service.emit(id, code);
 			if(warnings && warnings.length) {
 				warnings.forEach(this.warn);
 			}
@@ -86,7 +85,7 @@ export default function tsc(tsconfig) {
 
 function tslibLoader() {
 	let src;
-	return function() {
+	return () => {
 		if(src) {
 			return Promise.resolve(src);
 		}

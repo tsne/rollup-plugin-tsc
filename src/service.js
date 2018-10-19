@@ -34,45 +34,51 @@ export function createService(tsconfig) {
 		target: ScriptTarget.ES2015,
 		noEmitOnError: false,
 		suppressOutputPathCheck: true,
+		allowNonTsExtensions: true,
 	});
 
-	const host = createServiceHost(options, cwd);
+	const host = createServiceHost(options, fileNames, cwd);
 	const reg = createDocumentRegistry();
 	const svc = createLanguageService(host, reg);
-	const availFiles = fileNames.map(host.normalizePath);
-	svc.host = host;
 
-	svc.emit = function(filename) {
-		const output = svc.getEmitOutput(filename);
-		let diag = svc.getSyntacticDiagnostics(filename);
-		if(!diag.length) {
-			diag = svc.getCompilerOptionsDiagnostics();
+	return {
+		emit(filename, code) {
+			host.addFile(filename, code);
+
+			const output = svc.getEmitOutput(filename);
+			let diag = svc.getSyntacticDiagnostics(filename);
 			if(!diag.length) {
-				diag = svc.getSemanticDiagnostics(filename);
+				diag = svc.getCompilerOptionsDiagnostics();
+				if(!diag.length) {
+					diag = svc.getSemanticDiagnostics(filename);
+				}
 			}
-		}
 
-		output.errors = [];
-		output.warnings = [];
-		diag.forEach(d => {
-			const msg = errorMessage(d, cwd);
-			switch(d.category) {
-			case DiagnosticCategory.Error:
-				output.errors.push(msg);
-				break;
-			case DiagnosticCategory.Warning:
-				output.warnings.push(msg);
-				break;
-			}
-		});
-		return output;
-	}
+			output.errors = [];
+			output.warnings = [];
+			diag.forEach(d => {
+				const msg = errorMessage(d, cwd);
+				switch(d.category) {
+				case DiagnosticCategory.Error:
+					output.errors.push(msg);
+					break;
+				case DiagnosticCategory.Warning:
+					output.warnings.push(msg);
+					break;
+				}
+			});
+			return output;
+		},
 
-	svc.filter = function(filename) {
-		return availFiles.includes(filename);
-	}
+		filter(filename) {
+			return host.containsFile(filename);
+		},
 
-	return svc;
+		resolveModuleName(importee, importer) {
+			const {resolvedFileName} = host.resolveModuleName(importee, importer) || {};
+			return resolvedFileName;
+		},
+	};
 }
 
 
@@ -80,9 +86,9 @@ function errorMessage(diagnostic, cwd) {
 	const text = flattenDiagnosticMessageText(diagnostic.messageText, "\n");
 	if(!diagnostic.file) {
 		return `tsc: ${text}`;
-	} else {
-		const {line} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-		const file = relative(cwd, diagnostic.file.fileName);
-		return `${file}:${line+1}: ${text}`;
 	}
+
+	const {line} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+	const file = relative(cwd, diagnostic.file.fileName);
+	return `${file}:${line+1}: ${text}`;
 }
