@@ -1,17 +1,14 @@
-import {extname, normalize, resolve} from "path";
+import {normalize, resolve} from "path";
 import {existsSync, readFileSync} from "fs";
 import {sys, ScriptSnapshot, resolveModuleName, getDefaultLibFilePath} from "typescript";
 
 
 
-export function createServiceHost(options, cwd) {
-	const extensions = [".ts", ".tsx"];
-	if(options.allowJs) {
-		extensions.push(".js", ".jsx");
-	}
-
-	const files = {}; // normalized filename => {version, snap, text}
+export function createServiceHost(options, filenames, cwd) {
+	const normalizePath = (path) => resolve(normalize(path));
 	const moduleResolutionHost = createModuleResolutionHost();
+	const files = {}; // normalized filename => {version, snap, text}
+	filenames.forEach(filename => files[normalizePath(filename)] = null);
 
 	return {
 		getDirectories: sys.getDirectories,
@@ -19,22 +16,13 @@ export function createServiceHost(options, cwd) {
 		readDirectory: sys.readDirectory,
 		getDefaultLibFileName: getDefaultLibFilePath,
 
-		resolveModuleName(moduleName, containingFile) {
-			const {resolvedModule} = resolveModuleName(moduleName, containingFile, options, moduleResolutionHost);
-			if(resolvedModule) {
-				resolvedModule.resolvedFileName = this.normalizePath(resolvedModule.resolvedFileName);
-				resolvedModule.originalFileName = resolvedModule.resolvedFileName;
-			}
-			return resolvedModule;
-		},
-
 		fileExists(filename) {
-			filename = this.normalizePath(filename);
+			filename = normalizePath(filename);
 			return filename in files || sys.fileExists(filename);
 		},
 
 		readFile(filename) {
-			return readFileSync(this.normalizePath(filename), "utf-8");
+			return readFileSync(normalizePath(filename), "utf-8");
 		},
 
 		getCompilationSettings() {
@@ -46,16 +34,16 @@ export function createServiceHost(options, cwd) {
 		},
 
 		getScriptFileNames() {
-			return Object.keys(files).filter(path => extensions.includes(extname(path)));
+			return Object.keys(files);
 		},
 
 		getScriptVersion(filename) {
-			const f = files[this.normalizePath(filename)];
+			const f = files[normalizePath(filename)];
 			return f ? f.version.toString() : "";
 		},
 
 		getScriptSnapshot(filename) {
-			let f = files[this.normalizePath(filename)];
+			let f = files[normalizePath(filename)];
 			if(!f) {
 				f = this.addFile(filename, this.readFile(filename));
 			}
@@ -71,15 +59,24 @@ export function createServiceHost(options, cwd) {
 		},
 
 		// additional methods
-		normalizePath(path) {
-			return resolve(normalize(path));
+		containsFile(filename) {
+			return normalizePath(filename) in files;
+		},
+
+		resolveModuleName(moduleName, containingFile) {
+			const {resolvedModule} = resolveModuleName(moduleName, containingFile, options, moduleResolutionHost);
+			if(resolvedModule) {
+				resolvedModule.resolvedFileName = normalizePath(resolvedModule.resolvedFileName);
+				resolvedModule.originalFileName = resolvedModule.resolvedFileName;
+			}
+			return resolvedModule;
 		},
 
 		addFile(filename, text) {
-			filename = this.normalizePath(filename);
+			filename = normalizePath(filename);
 
 			const snap = ScriptSnapshot.fromString(text);
-			snap.getChangeRange = function() {};
+			snap.getChangeRange = () => {};
 
 			let file = files[filename];
 			if(!file) {
