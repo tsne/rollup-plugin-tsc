@@ -13,6 +13,7 @@ import {
 	DiagnosticCategory,
 } from "typescript";
 import {createServiceHost} from "./servicehost";
+import {fileFilter} from "./filter";
 
 
 
@@ -40,6 +41,8 @@ export function createService(tsconfig) {
 	const host = createServiceHost(options, fileNames, cwd);
 	const reg = createDocumentRegistry();
 	const svc = createLanguageService(host, reg);
+
+	const filter = fileFilter(tsconfig);
 
 	return {
 		emit(filename, code) {
@@ -71,7 +74,7 @@ export function createService(tsconfig) {
 		},
 
 		filter(filename) {
-			return host.containsFile(filename);
+			return filter(filename) || host.containsFile(filename);
 		},
 
 		resolveModuleName(importee, importer) {
