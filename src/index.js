@@ -18,7 +18,9 @@ export default function tsc(tsconfig) {
 		name: "tsc",
 
 		options(opts) {
-			tsconfig.sourcemap = tsconfig.sourcemap || opts.sourcemap;
+			if(tsconfig.sourceMap == null) {
+				tsconfig.sourceMap = opts.sourcemap;
+			}
 		},
 
 		resolveId(importee, importer) {
@@ -128,7 +130,7 @@ function mkdirAll(p) {
 
 function emitFile(filename, data) {
 	return new Promise((resolve, reject) => {
-		fs.writeFile(filename, err => {
+		fs.writeFile(filename, data, err => {
 			if(err) {
 				reject(err);
 			} else {

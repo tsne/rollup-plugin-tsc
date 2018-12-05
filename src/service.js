@@ -20,7 +20,6 @@ import {fileFilter} from "./filter";
 const defaultCompilerOptions = {
 	module: ModuleKind.ES2015,
 	moduleResolution: ModuleResolutionKind.NodeJs,
-	sourceMap: true,
 };
 
 
