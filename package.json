@@ -32,6 +32,6 @@
   },
   "dependencies": {
     "tslib": "^1.9.3",
-    "typescript": "^3.2.1"
+    "typescript": "^3.2.2"
   }
 }
