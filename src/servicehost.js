@@ -4,11 +4,9 @@ import {sys, ScriptSnapshot, resolveModuleName, getDefaultLibFilePath} from "typ
 
 
 
-export function createServiceHost(options, filenames, cwd) {
+export function createServiceHost(tsConfig, cwd) {
 	const normalizePath = (path) => resolve(normalize(path));
 	const moduleResolutionHost = createModuleResolutionHost();
-	const files = {}; // normalized filename => {version, snap, text}
-	filenames.forEach(filename => files[normalizePath(filename)] = null);
 
 	return {
 		getDirectories: sys.getDirectories,
@@ -16,9 +14,18 @@ export function createServiceHost(options, filenames, cwd) {
 		readDirectory: sys.readDirectory,
 		getDefaultLibFileName: getDefaultLibFilePath,
 
+    _files: null,
+    get files() {
+      if(!this._files) {
+        this._files = [];
+        tsConfig.fileNames.forEach(filename => this._files[normalizePath(filename)] = null);
+      }
+      return this._files;
+    },
+
 		fileExists(filename) {
 			filename = normalizePath(filename);
-			return filename in files || sys.fileExists(filename);
+			return filename in this.files || sys.fileExists(filename);
 		},
 
 		readFile(filename) {
@@ -26,7 +33,7 @@ export function createServiceHost(options, filenames, cwd) {
 		},
 
 		getCompilationSettings() {
-			return options;
+			return tsConfig.options;
 		},
 
 		getCurrentDirectory() {
@@ -34,16 +41,16 @@ export function createServiceHost(options, filenames, cwd) {
 		},
 
 		getScriptFileNames() {
-			return Object.keys(files);
+			return Object.keys(this.files);
 		},
 
 		getScriptVersion(filename) {
-			const f = files[normalizePath(filename)];
+			const f = this.files[normalizePath(filename)];
 			return f ? f.version.toString() : "";
 		},
 
 		getScriptSnapshot(filename) {
-			let f = files[normalizePath(filename)];
+			let f = this.files[normalizePath(filename)];
 			if(!f) {
 				f = this.addFile(filename, this.readFile(filename));
 			}
@@ -55,16 +62,16 @@ export function createServiceHost(options, filenames, cwd) {
 		},
 
 		getNewLine() {
-			return options.newLine || sys.newLine;
+			return tsConfig.options.newLine || sys.newLine;
 		},
 
 		// additional methods
 		containsFile(filename) {
-			return normalizePath(filename) in files;
+			return normalizePath(filename) in this.files;
 		},
 
 		resolveModuleName(moduleName, containingFile) {
-			const {resolvedModule} = resolveModuleName(moduleName, containingFile, options, moduleResolutionHost);
+			const {resolvedModule} = resolveModuleName(moduleName, containingFile, tsConfig.options, moduleResolutionHost);
 			if(resolvedModule) {
 				resolvedModule.resolvedFileName = normalizePath(resolvedModule.resolvedFileName);
 				resolvedModule.originalFileName = resolvedModule.resolvedFileName;
@@ -78,10 +85,10 @@ export function createServiceHost(options, filenames, cwd) {
 			const snap = ScriptSnapshot.fromString(text);
 			snap.getChangeRange = () => {};
 
-			let file = files[filename];
+			let file = this.files[filename];
 			if(!file) {
 				file = {version: 0};
-				files[filename] = file;
+				this.files[filename] = file;
 			}
 			++file.version;
 			file.snap = snap;

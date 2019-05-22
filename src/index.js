@@ -2,15 +2,14 @@ import * as path from "path";
 import * as fs from "fs";
 import {module as tslibModule, name as tslib} from "tslib/package.json";
 import {createService} from "./service";
+import {createTsConfig} from "./tsconfig"
 
 
+export default function tsc(config) {
 
-export default function tsc(tsconfig) {
-	tsconfig = tsconfig || {};
-	tsconfig.compilerOptions = tsconfig.compilerOptions || {};
-
+  const tsConfig  = createTsConfig(config);
 	const loadTslib = tslibLoader();
-	const service = createService(tsconfig);
+	const service   = createService(tsConfig);
 
 	let bundleDecls = [];
 
@@ -18,8 +17,8 @@ export default function tsc(tsconfig) {
 		name: "tsc",
 
 		options(opts) {
-			if(tsconfig.sourceMap == null) {
-				tsconfig.sourceMap = opts.sourcemap;
+			if(tsConfig.sourceMap == null) {
+				tsConfig.sourceMap = opts.sourcemap;
 			}
 		},
 
@@ -76,7 +75,7 @@ export default function tsc(tsconfig) {
 				return;
 			}
 
-			const dir = tsconfig.compilerOptions.declarationDir || path.dirname(opts.file);
+			const dir = tsConfig.compilerOptions.declarationDir || path.dirname(opts.file);
 			return mkdirAll(dir).then(() => Promise.all(bundleDecls.map(decl => {
 				const file = path.basename(decl.name);
 				return emitFile(path.join(dir, file), decl.text);

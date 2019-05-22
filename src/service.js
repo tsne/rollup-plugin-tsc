@@ -2,46 +2,19 @@ import * as process from "process";
 import {existsSync, readFileSync} from "fs";
 import {dirname, relative} from "path";
 import {
-	sys,
-	parseJsonConfigFileContent,
 	createDocumentRegistry,
 	createLanguageService,
 	flattenDiagnosticMessageText,
-	ScriptTarget,
-	ModuleKind,
-	ModuleResolutionKind,
-	DiagnosticCategory,
+	DiagnosticCategory
 } from "typescript";
 import {createServiceHost} from "./servicehost";
 import {fileFilter} from "./filter";
 
-
-
-const defaultCompilerOptions = {
-	module: ModuleKind.ES2015,
-	moduleResolution: ModuleResolutionKind.NodeJs,
-};
-
-
-export function createService(tsconfig) {
-	const cwd = process.cwd();
-	const {options, fileNames, errors} = parseJsonConfigFileContent(tsconfig, sys, dirname(""), defaultCompilerOptions);
-	if(errors.length) {
-		throw new Error(errorMessage(errors[0], cwd));
-	}
-
-	Object.assign(options, {
-		target: ScriptTarget.ES2015,
-		noEmitOnError: false,
-		suppressOutputPathCheck: true,
-		allowNonTsExtensions: true,
-	});
-
-	const host = createServiceHost(options, fileNames, cwd);
-	const reg = createDocumentRegistry();
-	const svc = createLanguageService(host, reg);
-
-	const filter = fileFilter(tsconfig);
+export function createService(tsConfig) {
+	const cwd  = process.cwd();
+  const host = createServiceHost(tsConfig, cwd);
+	const reg  = createDocumentRegistry();
+	const svc  = createLanguageService(host, reg);
 
 	return {
 		emit(filename, code) {
@@ -72,8 +45,12 @@ export function createService(tsconfig) {
 			return output;
 		},
 
+    _filter: null,
 		filter(filename) {
-			return filter(filename) || host.containsFile(filename);
+      if (!this._filter) {
+          this._filter = fileFilter(tsConfig);
+      }
+			return this._filter(filename) || host.containsFile(filename);
 		},
 
 		resolveModuleName(importee, importer) {
