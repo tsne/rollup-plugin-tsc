@@ -5,7 +5,7 @@ export default {
 	input: "src/index.js",
 	output: [
 		{file: pkg["module"], format: "esm", sourcemap: true},
-		{file: pkg["main"], format: "cjs", sourcemap: true},
+		{file: pkg["main"], format: "cjs", sourcemap: true, exports: "auto"},
 	],
 	external: [
 		"typescript",
