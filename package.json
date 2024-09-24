@@ -28,7 +28,7 @@
     "url": "git+https://github.com/tsne/rollup-plugin-tsc.git"
   },
   "devDependencies": {
-    "rollup": "^2.26.3"
+    "rollup": "^3.29.5"
   },
   "dependencies": {
     "tslib": "^2.0.1",
